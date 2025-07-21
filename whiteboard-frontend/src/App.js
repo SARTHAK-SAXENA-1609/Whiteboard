@@ -3,7 +3,7 @@
 function App() {
   return (
     <div >
-      <h1>My first app </h1>
+      <h1>My first app 2 </h1>
     </div>
   );
 }
