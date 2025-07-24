@@ -24,16 +24,16 @@ function Board() {
 
   } ,[elements]);
 
-  useEffect ( () => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    const roughCanvas = rough.canvas(canvas);
-    let rect1= roughCanvas.rectangle(110, 120, 300, 300, {
-      fill: 'red',
-      stroke: 'black',
-    });
-    roughCanvas.draw(rect1);
-  } , []);
+  // useEffect ( () => {
+  //   const canvas = canvasRef.current;
+  //   const context = canvas.getContext('2d');
+  //   const roughCanvas = rough.canvas(canvas);
+  //   let rect1= roughCanvas.rectangle(110, 120, 300, 300, {
+  //     fill: 'red',
+  //     stroke: 'black',
+  //   });
+  //   roughCanvas.draw(rect1);
+  // } , []);
 
   const handleBoardMouseDown = (event) => {
     boardMouseDownHandler(event);
