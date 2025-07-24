@@ -5,6 +5,8 @@ function Board() {
   const canvasRef = useRef();
   useEffect(() =>{
     const canvas = canvasRef.current;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     const context = canvas.getContext('2d');
     const roughCanvas = rough.canvas(canvas);
     let rect1= roughCanvas.rectangle(110, 120, 300, 300, {
@@ -14,7 +16,14 @@ function Board() {
     roughCanvas.draw(rect1);
   } ,[]);
 
-  return <canvas ref = {canvasRef} />; 
+  const handleBoardMouseDown = (event) => {
+    const clientX = event.clientX;
+    const clientY = event.clientY;
+    console.log(clientX , clientY);
+  };
+  // console.log("HELLO");
+
+  return <canvas ref = {canvasRef} onMouseDown={handleBoardMouseDown} />; 
 }
 
 export default Board;
