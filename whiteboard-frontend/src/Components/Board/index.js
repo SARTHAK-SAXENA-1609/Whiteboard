@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect , useRef } from 'react';
+import { useCallback, useContext, useEffect , useLayoutEffect, useRef } from 'react';
 import rough from 'roughjs';
 import boardContext from '../../store/board-context';
 import { TOOL_ACTION_TYPES } from '../../constants';
@@ -7,7 +7,15 @@ function Board() {
   const canvasRef = useRef();
   const{ elements , boardMouseDownHandler , boardMouseMoveHandler ,toolActionType , boardMouseUpHandler } = useContext(boardContext);
 
-  useEffect(() =>{
+  // here use layout effect is used instead of use effect
+  // Timing: Runs after React renders your component but before the browser paints the changes to the screen.
+  // behavior: It's synchronous and blocks the browser from painting. React will wait for your effect to finish 
+  // before it visually updates the screen.
+  // Use this only when your effect needs to measure the DOM (e.g., get an element's height or scroll position) 
+  // and then make a change that needs to be visible in the very same paint. This is primarily to avoid a visual 
+  // flicker, where a component renders in one state and then quickly re-renders to another.
+
+  useLayoutEffect(() =>{
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     context.save();
@@ -23,17 +31,6 @@ function Board() {
     };
 
   } ,[elements]);
-
-  // useEffect ( () => {
-  //   const canvas = canvasRef.current;
-  //   const context = canvas.getContext('2d');
-  //   const roughCanvas = rough.canvas(canvas);
-  //   let rect1= roughCanvas.rectangle(110, 120, 300, 300, {
-  //     fill: 'red',
-  //     stroke: 'black',
-  //   });
-  //   roughCanvas.draw(rect1);
-  // } , []);
 
   const handleBoardMouseDown = (event) => {
     boardMouseDownHandler(event);

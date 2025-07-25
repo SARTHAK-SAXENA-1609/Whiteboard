@@ -30,11 +30,26 @@ const Toolbar = () => {
         >
           <FaSlash /> 
         </div>
+
         <div className = {
           cx(classes.toolItem , { [classes.active]: activeToolItem === TOOL_ITEMS.RECTANGLE })
         } onClick = { ()=> changeToolHandler(TOOL_ITEMS.RECTANGLE)  }>
            <LuRectangleHorizontal />
         </div>
+
+        <div className = {
+          cx(classes.toolItem , { [classes.active]: activeToolItem === TOOL_ITEMS.CIRCLE })
+        } onClick = { ()=> changeToolHandler(TOOL_ITEMS.CIRCLE)  }>
+           <FaRegCircle />
+        </div>
+
+        <div className = {
+          cx(classes.toolItem , { [classes.active]: activeToolItem === TOOL_ITEMS.ARROW })
+        } onClick = { ()=> changeToolHandler(TOOL_ITEMS.ARROW)  }>
+           < FaArrowRight/>
+        </div>
+
+
     </div>
   )
 }
