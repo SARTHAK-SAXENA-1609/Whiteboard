@@ -4,16 +4,30 @@ import { getArrowHeadsCoordinates } from "./math";
 
 const gen = rough.generator();
 
-export const createRoughElement = (id , x1 , y1 , x2 , y2 , { type })=> {
+export const createRoughElement = (id , x1 , y1 , x2 , y2 , { type , stroke , fill , size })=> {
     const element = {
         id,
         x1,
         x2,
         y1,
         y2,
+        type,
+        fill,
+        stroke,
+        size,
     };
     let options = {
         seed : id+1, // id cant be zero
+        fillStyle : "solid" ,
+    }
+    if(stroke){
+        options.stroke = stroke;
+    }
+    if(fill){
+        options.fill = fill;
+    }
+    if(size){
+        options.strokeWidth = size;
     }
     switch (type){
         case TOOL_ITEMS.LINE : {
@@ -27,7 +41,7 @@ export const createRoughElement = (id , x1 , y1 , x2 , y2 , { type })=> {
         case TOOL_ITEMS.CIRCLE : {
             const cx = (x1+x2)/2 , cy = (y1+y2)/2;
             const width = x2-x1 , height = y2-y1;
-            element.roughEle = gen.ellipse(cx, cy, width, height);
+            element.roughEle = gen.ellipse(cx, cy, width, height , options);
             return element;
         }
         // there is no direct way to draw arrow so used coordinate geometry 

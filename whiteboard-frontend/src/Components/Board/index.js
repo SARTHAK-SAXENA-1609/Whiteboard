@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect , useLayoutEffect, useRef } from 'react';
 import rough from 'roughjs';
 import boardContext from '../../store/board-context';
+import toolboxContext from '../../store/toolbox-context';
 import { TOOL_ACTION_TYPES } from '../../constants';
 
 function Board() {
@@ -32,8 +33,10 @@ function Board() {
 
   } ,[elements]);
 
+  const { toolboxState } = useContext(toolboxContext);
+
   const handleBoardMouseDown = (event) => {
-    boardMouseDownHandler(event);
+    boardMouseDownHandler(event , toolboxState );
   };
   
   const handleMouseMove = (event) => {
