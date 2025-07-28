@@ -3,6 +3,7 @@ import rough from 'roughjs';
 import boardContext from '../../store/board-context';
 import toolboxContext from '../../store/toolbox-context';
 import { TOOL_ACTION_TYPES, TOOL_ITEMS } from '../../constants';
+import classes from './index.module.css';
 
 function Board() {
   const canvasRef = useRef();
@@ -35,7 +36,11 @@ function Board() {
           context.fillStyle = element.stroke;
           context.fill(element.path);
           context.restore();
-            break;    
+            break;  
+        case TOOL_ITEMS.TEXT : {
+          console.log("something");
+          break;
+        }  
         default:
           throw new Error('Type not recognized');
       }
@@ -55,21 +60,37 @@ function Board() {
   };
   
   const handleMouseMove = (event) => {
-    if(toolActionType === TOOL_ACTION_TYPES.DRAWING){
       boardMouseMoveHandler(event);
-    }
   };
 
   const handleMouseUp = (event) => {
     boardMouseUpHandler();
   };
 
-  return <canvas 
-    ref = {canvasRef} 
-    onMouseDown = {handleBoardMouseDown} 
-    onMouseMove = {handleMouseMove}
-    onMouseUp = {handleMouseUp}
- />; 
+  return (
+    <>
+    {toolActionType === TOOL_ACTION_TYPES.WRITING && <textarea
+      type = "text"
+      className={classes.textElementBox}
+      style={{
+        top : elements[elements.length-1].y1,
+        left : elements[elements.length-1].x1,
+        fontSize : `${elements[elements.length-1]?.size }px`,
+        color : elements[elements.length-1]?.stroke,
+      }}
+
+    /> }
+  
+    <canvas 
+      ref = {canvasRef} 
+      id = "canvas"
+      onMouseDown = {handleBoardMouseDown} 
+      onMouseMove = {handleMouseMove}
+      onMouseUp = {handleMouseUp}
+     />
+     </>
+ )
+ ; 
 }
 
 export default Board;
