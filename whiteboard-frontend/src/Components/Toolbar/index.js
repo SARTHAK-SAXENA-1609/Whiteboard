@@ -23,6 +23,16 @@ const Toolbar = () => {
   
   return (
     <div className = {classes.container} >
+
+        <div className = { 
+          cx(classes.toolItem , { [classes.active]: activeToolItem === TOOL_ITEMS.BRUSH })
+        } 
+        onClick = {()=> changeToolHandler(TOOL_ITEMS.BRUSH)  }
+        >
+          <FaPaintBrush /> 
+        </div>
+
+
         <div className = { 
           cx(classes.toolItem , { [classes.active]: activeToolItem === TOOL_ITEMS.LINE })
         } 
@@ -47,6 +57,12 @@ const Toolbar = () => {
           cx(classes.toolItem , { [classes.active]: activeToolItem === TOOL_ITEMS.ARROW })
         } onClick = { ()=> changeToolHandler(TOOL_ITEMS.ARROW)  }>
            < FaArrowRight/>
+        </div>
+
+        <div className = {
+          cx(classes.toolItem , { [classes.active]: activeToolItem === TOOL_ITEMS.ERASER })
+        } onClick = { ()=> changeToolHandler(TOOL_ITEMS.ERASER)  }>
+           < FaEraser/>
         </div>
 
 
