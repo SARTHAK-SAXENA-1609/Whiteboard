@@ -7,7 +7,14 @@ import classes from './index.module.css';
 
 function Board() {
   const canvasRef = useRef();
-  const{ elements , boardMouseDownHandler , boardMouseMoveHandler ,toolActionType , boardMouseUpHandler } = useContext(boardContext);
+  const textAreaRef = useRef();
+  const{ elements ,
+     boardMouseDownHandler ,
+      boardMouseMoveHandler ,
+      toolActionType ,
+       boardMouseUpHandler,
+      textAreaBlurHandler,
+      } = useContext(boardContext);
 
   // here use layout effect is used instead of use effect
   // Timing: Runs after React renders your component but before the browser paints the changes to the screen.
@@ -38,7 +45,11 @@ function Board() {
           context.restore();
             break;  
         case TOOL_ITEMS.TEXT : {
-          console.log("something");
+          context.textBaseline = "top";
+          context.font = `${element.size}px Caveat`;
+          context.fillStyle = element.stroke;
+          context.fillText(element.text, element.x1, element.y1);
+          context.restore();
           break;
         }  
         default:
@@ -54,6 +65,15 @@ function Board() {
   } ,[elements]);
 
   const { toolboxState } = useContext(toolboxContext);
+
+  useEffect(()=>{
+    const textArea = textAreaRef.current;
+    if(toolActionType === TOOL_ACTION_TYPES.WRITING){
+      setTimeout(()=>{
+        textArea.focus();
+      } , 0);
+    }
+  } , [toolActionType] )
 
   const handleBoardMouseDown = (event) => {
     boardMouseDownHandler(event , toolboxState );
@@ -71,6 +91,7 @@ function Board() {
     <>
     {toolActionType === TOOL_ACTION_TYPES.WRITING && <textarea
       type = "text"
+      ref = {textAreaRef}
       className={classes.textElementBox}
       style={{
         top : elements[elements.length-1].y1,
@@ -78,7 +99,7 @@ function Board() {
         fontSize : `${elements[elements.length-1]?.size }px`,
         color : elements[elements.length-1]?.stroke,
       }}
-
+      onBlur = {(event) => textAreaBlurHandler(event.target.value , toolboxState)}
     /> }
   
     <canvas 

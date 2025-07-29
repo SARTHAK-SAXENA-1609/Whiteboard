@@ -92,7 +92,17 @@ const boardReducer = (state, action) => {
         ...state,
         elements : newElements,
       } 
+    }
 
+    case BOARD_ACTIONS.CHANGE_TEXT : {
+      const index = state.elements.length -1;
+      const newElements = [...state.elements];
+      newElements[index].text = action.payload.text;
+      return{
+        ...state,
+        toolActionType : TOOL_ACTION_TYPES.NONE,
+        elements : newElements,
+      }
     }
 
     default:
@@ -179,6 +189,17 @@ const BoardProvider = ({ children }) => {
     });
   };
 
+  const textAreaBlurHandler = (text , toolboxState)=>{
+    distpatchBoardAction({
+      type : BOARD_ACTIONS.CHANGE_TEXT,
+      payload : {
+        text,
+        // stroke : toolboxState[boardState.activeToolItem]?.stroke,
+        // size : toolboxState[boardState.activeToolItem]?.size,
+      }
+    })
+  }
+
   const boardContextValue = {
     activeToolItem: boardState.activeToolItem,
     elements: boardState.elements,
@@ -187,6 +208,7 @@ const BoardProvider = ({ children }) => {
     boardMouseDownHandler,
     boardMouseMoveHandler,
     boardMouseUpHandler,
+    textAreaBlurHandler,
   };
 
   return (

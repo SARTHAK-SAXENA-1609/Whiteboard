@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import classes from './index.module.css';
-import { COLORS, FILL_TOOL_TYPES, SIZE_TOOL_TYPES, STROKE_TOOL_TYPES } from '../../constants';
+import { COLORS, FILL_TOOL_TYPES, SIZE_TOOL_TYPES, STROKE_TOOL_TYPES, TOOL_ITEMS } from '../../constants';
 import cx from 'classnames';
 import toolboxContext from '../../store/toolbox-context';
 import boardContext from '../../store/board-context';
@@ -59,11 +59,11 @@ const Toolbox = () => {
 
 
       {SIZE_TOOL_TYPES.includes(activeToolItem) && (<div className={classes.selectOptionContainer}>
-        <div className={classes.toolBoxLabel}> Brush Size </div>
+        <div className={classes.toolBoxLabel}> {activeToolItem === TOOL_ITEMS.TEXT ? "Font Size" : "Brush Size"} </div>
         <input
             type="range"
-            min = {1}
-            max = {10}
+            min = {activeToolItem === TOOL_ITEMS.TEXT ? 12 : 1}
+            max = {activeToolItem === TOOL_ITEMS.TEXT ? 64 : 10}
             step={1}
             value={size}
             onChange={(event) => changeSize(activeToolItem, event.target.value)}
