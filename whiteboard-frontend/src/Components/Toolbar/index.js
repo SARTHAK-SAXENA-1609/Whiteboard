@@ -19,7 +19,7 @@ import { TOOL_ITEMS } from '../../constants';
 
 
 const Toolbar = () => {
-  const {activeToolItem , changeToolHandler} = useContext(boardContext);
+  const {activeToolItem , changeToolHandler , undo , redo } = useContext(boardContext);
   
   return (
     <div className = {classes.container} >
@@ -69,6 +69,18 @@ const Toolbar = () => {
           cx(classes.toolItem , { [classes.active]: activeToolItem === TOOL_ITEMS.TEXT })
         } onClick = { ()=> changeToolHandler(TOOL_ITEMS.TEXT)  }>
            < FaFont/>
+        </div>
+
+        <div className = {
+          classes.toolItem 
+        } onClick = { ()=> undo()  }>
+           < FaUndoAlt/>
+        </div>
+
+        <div className = {
+          classes.toolItem 
+        } onClick = { ()=> redo()  }>
+           < FaRedoAlt/>
         </div>
 
 
