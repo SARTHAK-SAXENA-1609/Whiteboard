@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect , useLayoutEffect, useRef } from 'react';
+import { useContext, useEffect , useLayoutEffect, useRef } from 'react';
 import rough from 'roughjs';
 import boardContext from '../../store/board-context';
 import toolboxContext from '../../store/toolbox-context';
@@ -14,6 +14,8 @@ function Board() {
       toolActionType ,
        boardMouseUpHandler,
       textAreaBlurHandler,
+      undo,
+      redo
       } = useContext(boardContext);
 
   // here use layout effect is used instead of use effect
@@ -74,6 +76,23 @@ function Board() {
       } , 0);
     }
   } , [toolActionType] )
+
+
+  useEffect(()=>{
+    function handleKeyDown ( event ) {
+      if(event.ctrlKey && event.key === 'z'){
+        undo();
+      }
+      else if(event.ctrlKey && event.key === 'y'){
+        redo();
+      }
+    }
+
+    document.addEventListener("keydown" , handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown" , handleKeyDown);
+    };
+  } , [undo , redo])
 
   const handleBoardMouseDown = (event) => {
     boardMouseDownHandler(event , toolboxState );
