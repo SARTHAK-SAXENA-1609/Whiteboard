@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
+require("dotenv").config();
 
-const conectionUri = `mongodb+srv://sarsaxena1609:%23ss9343823445@whiteboard-cluster.o3c5g.mongodb.net/?retryWrites=true&w=majority&appName=WHITEBOARD-CLUSTER`
+const mongoURL = process.env.MONGODB_URL;
 
 const connectToDatabase = async () => {
     try{
-        await mongoose.connect(conectionUri);
+        await mongoose.connect(mongoURL);
         console.log('Connected to the database');
     }
     catch (error){

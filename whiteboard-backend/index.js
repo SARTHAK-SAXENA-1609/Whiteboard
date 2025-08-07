@@ -2,15 +2,15 @@ const express = require("express");
 const app = express();
 const cors = require('cors');
 const connectToDatabase = require('./db');
+const userRoutes = require("./routes/userRoutes");
 
 connectToDatabase();
 
 app.use(cors());
+app.use(express.json())
 
-app.get('/data' , (req , res) => {
-    res.json({ message: 'Hello from the server!' });
-})
+app.use('/users' , userRoutes);
 
 app.listen(3030 , () => { 
     console.log("listening on 3030");
-})
+})  
