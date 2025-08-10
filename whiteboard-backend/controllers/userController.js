@@ -1,24 +1,55 @@
 const User = require("../models/userModel");
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET;
 
-const addUser = async (req , res)=> {
+
+const registerUser = async (req , res) => {
     try{
-        const newUser = new User(req.body);
-        const savedUser = await newUser.save();
-        res.status(200).json(savedUser);
+        const {email , password} = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ error: "All fields are required" });
+        }
+        const existingUser = User.findOne({email});
+        if(existingUser){
+            return res.status(400).json({ error: "User already exists" });
+        }
+        const newUser = new User({email , password});
+        await newUser.save();
+        res.status(201).json({ message: "User registered successfully!" });
     }
-    catch(error) {
-        res.status(400).json({error : error.message});
+    catch (error) {
+        res.status(500).json({error: "Registration failed", details: error.message});
+    }
+}
+
+
+const loginUser = async (req , res) => {
+    try{
+        const {email , password} = req.body;
+
+        const existingUser = User.findOne({email});
+        if(!existingUser){
+            res.status(400).json({ error: "Invalid credentials" });
+        }
+        const isMatch = await existingUser.comparePassword(password);
+        if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
+        const token = jwt.sign({userId : existingUser._id} , JWT_SECRET , {expiresIn : "7d"});
+        res.json({message : "Login Successful", token});
+    }
+    catch ( error ){
+        res.status(500).json({ error: "Login failed", details: error.message });
     }
 }
 
 const getUser = async (req , res)=> {
-    try{
-        const Users = await User.find();
-        res.status(200).json(Users);
-    }
-    catch(error) {
-        res.status(500).json({error : error.message});
+    try {
+        const user = await User.findById(req.userId).select("-password");
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to get user", details: error.message });
     }
 }
 
-module.exports = {addUser , getUser};
+module.exports = {loginUser , registerUser , getUser};

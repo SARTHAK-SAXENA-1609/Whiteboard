@@ -18,3 +18,5 @@ const validateUser = [
         next();
     }
 ];
+
+module.exports = { validateUser };
