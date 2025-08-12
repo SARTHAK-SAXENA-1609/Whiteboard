@@ -9,7 +9,8 @@ const registerUser = async (req , res) => {
         if (!email || !password) {
             return res.status(400).json({ error: "All fields are required" });
         }
-        const existingUser = User.findOne({email});
+        const existingUser = await User.findOne({email});
+        console.log(email);
         if(existingUser){
             return res.status(400).json({ error: "User already exists" });
         }
@@ -23,23 +24,23 @@ const registerUser = async (req , res) => {
 }
 
 
-const loginUser = async (req , res) => {
-    try{
-        const {email , password} = req.body;
+const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-        const existingUser = User.findOne({email});
-        if(!existingUser){
-            res.status(400).json({ error: "Invalid credentials" });
-        }
-        const isMatch = await existingUser.comparePassword(password);
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ error: "Invalid credentials" });
+
+        const isMatch = await user.comparePassword(password);
         if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
-        const token = jwt.sign({userId : existingUser._id} , JWT_SECRET , {expiresIn : "7d"});
-        res.json({message : "Login Successful", token});
-    }
-    catch ( error ){
+
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: "7d" });
+
+        res.json({ message: "Login successful", token });
+    } catch (error) {
         res.status(500).json({ error: "Login failed", details: error.message });
     }
-}
+};
 
 const getUser = async (req , res)=> {
     try {
