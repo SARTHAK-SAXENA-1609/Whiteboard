@@ -3,6 +3,8 @@ import boardContext from './board-context';
 import { BOARD_ACTIONS, TOOL_ACTION_TYPES, TOOL_ITEMS } from '../constants';
 import { createElement, getSvgPathFromStroke, isPointNearElement } from '../utils/element';
 import getStroke from 'perfect-freehand';
+import { updateCanvas, fetchInitialCanvasElements } from "../utils/api";
+const canvasId = "67a66a7c2475972d34655e4d";
 
 const boardReducer = (state, action) => {
   switch (action.type) {
@@ -39,16 +41,23 @@ const boardReducer = (state, action) => {
     }
 
     case BOARD_ACTIONS.DRAW_MOVE: {
+      // ✅ FIX: Guard clause to prevent crash on empty elements array
+      if (!state.elements || state.elements.length === 0) {
+        return state;
+      }
+
       const { clientX, clientY } = action.payload;
       const newElements = [...state.elements];
       const index = state.elements.length - 1;
+      
+      // This line is now safe
       const { type } = newElements[index];
 
       switch (type) {
         case TOOL_ITEMS.LINE:
         case TOOL_ITEMS.RECTANGLE:
         case TOOL_ITEMS.CIRCLE:
-        case TOOL_ITEMS.ARROW:
+        case TOOL_ITEMS.ARROW: {
           const { x1, y1, stroke, fill, size } = newElements[index];
           const newElement = createElement(
             index,
@@ -63,6 +72,7 @@ const boardReducer = (state, action) => {
             ...state,
             elements: newElements,
           };
+        }
 
         case TOOL_ITEMS.BRUSH: {
           newElements[index].points = [...newElements[index].points, { x: clientX, y: clientY }];
@@ -73,13 +83,14 @@ const boardReducer = (state, action) => {
           };
         }
         case TOOL_ITEMS.TEXT: {
-            return state;
+          return state;
         }
 
         default:
           throw new Error("Type not recognized");
       }
     }
+
 
     case BOARD_ACTIONS.DRAW_UP: {
       const newHistory = state.history.slice(0, state.index + 1);
@@ -136,11 +147,40 @@ const boardReducer = (state, action) => {
         index: state.index + 1,
       };
     }
+    case BOARD_ACTIONS.SET_HISTORY:
+      return {
+        ...state,
+        history: [Array.isArray(action.payload.elements) ? action.payload.elements : []],
+    }
+    case BOARD_ACTIONS.SET_USER_LOGIN_STATUS:
+      return {
+        ...state,
+        isUserLoggedIn: action.payload.isUserLoggedIn,
+    }
+    case BOARD_ACTIONS.SET_INITIAL_ELEMENTS: {
+      return {
+        ...state,
+        elements: action.payload.elements,
+        history: [action.payload.elements], 
+      };
+    }
+    case BOARD_ACTIONS.SET_CANVAS_ID:
+      return {
+        ...state,
+        canvasId: action.payload.canvasId,
+      }
+    case BOARD_ACTIONS.SET_CANVAS_ELEMENTS:
+      return {
+        ...state,
+        elements: action.payload.elements,
+      }
 
     default:
       return state;
   }
 };
+
+const isUserLoggedIn = !!localStorage.getItem("whiteboard_user_token");
 
 const initialBoardState = {
   activeToolItem: TOOL_ITEMS.BRUSH,
@@ -148,16 +188,18 @@ const initialBoardState = {
   elements: [],
   history: [[]],
   index: 0,
+  canvasId: "",
+  isUserLoggedIn: isUserLoggedIn,
 };
 
 const BoardProvider = ({ children }) => {
-  const [boardState, distpatchBoardAction] = useReducer(
+  const [boardState, dispatchBoardAction] = useReducer(
     boardReducer,
     initialBoardState
   );
 
   const changeToolHandler = (tool) => {
-    distpatchBoardAction({
+    dispatchBoardAction({
       type: BOARD_ACTIONS.CHANGE_TOOL,
       payload: {
         tool,
@@ -169,7 +211,7 @@ const BoardProvider = ({ children }) => {
     if (boardState.toolActionType === TOOL_ACTION_TYPES.WRITING) return;
     const { clientX, clientY } = event;
     if (boardState.activeToolItem === TOOL_ITEMS.ERASER) {
-      distpatchBoardAction({
+      dispatchBoardAction({
         type: BOARD_ACTIONS.CHANGE_ACTION_TYPE,
         payload: {
           actionType: TOOL_ACTION_TYPES.ERASING,
@@ -177,7 +219,7 @@ const BoardProvider = ({ children }) => {
       });
       return;
     }
-    distpatchBoardAction({
+    dispatchBoardAction({
       type: BOARD_ACTIONS.DRAW_DOWN,
       payload: {
         clientX,
@@ -193,7 +235,7 @@ const BoardProvider = ({ children }) => {
     if (boardState.toolActionType === TOOL_ACTION_TYPES.WRITING) return;
     const { clientX, clientY } = event;
     if (boardState.toolActionType === TOOL_ACTION_TYPES.DRAWING) {
-      distpatchBoardAction({
+      dispatchBoardAction({
         type: BOARD_ACTIONS.DRAW_MOVE,
         payload: {
           clientX,
@@ -201,7 +243,7 @@ const BoardProvider = ({ children }) => {
         },
       });
     } else if (boardState.toolActionType === TOOL_ACTION_TYPES.ERASING) {
-      distpatchBoardAction({
+      dispatchBoardAction({
         type: BOARD_ACTIONS.ERASE,
         payload: {
           clientX,
@@ -218,12 +260,12 @@ const BoardProvider = ({ children }) => {
       toolActionType === TOOL_ACTION_TYPES.DRAWING ||
       toolActionType === TOOL_ACTION_TYPES.ERASING
     ) {
-      distpatchBoardAction({
+      dispatchBoardAction({
         type: BOARD_ACTIONS.DRAW_UP,
       });
     }
 
-    distpatchBoardAction({
+    dispatchBoardAction({
       type: BOARD_ACTIONS.CHANGE_ACTION_TYPE,
       payload: {
         actionType: TOOL_ACTION_TYPES.NONE, 
@@ -232,7 +274,7 @@ const BoardProvider = ({ children }) => {
   };
 
   const textAreaBlurHandler = (text) => {
-    distpatchBoardAction({
+    dispatchBoardAction({
       type: BOARD_ACTIONS.CHANGE_TEXT,
       payload: {
         text,
@@ -241,21 +283,59 @@ const BoardProvider = ({ children }) => {
   };
 
   const boardUndoHandler = useCallback(() => {
-    distpatchBoardAction({
+    dispatchBoardAction({
       type: BOARD_ACTIONS.UNDO,
     });
   } , []);
 
   const boardRedoHandler = useCallback(() => {
-    distpatchBoardAction({
+    dispatchBoardAction({
       type: BOARD_ACTIONS.REDO,
     });
   },[]);
 
-  const boardContextValue = {
+  const setCanvasId = (canvasId) => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.SET_CANVAS_ID,
+      payload: {
+        canvasId,
+      },
+    });
+  };
+
+  const setElements = (elements) => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.SET_CANVAS_ELEMENTS,
+      payload: {
+        elements,
+      },
+    });
+  };
+    // console.log("hello canvas")
+  const setHistory = (elements) => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.SET_HISTORY,
+      payload: {
+        elements,
+      },
+    });
+  };  
+
+  const setUserLoginStatus = (isUserLoggedIn) => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.SET_USER_LOGIN_STATUS,
+      payload: {
+        isUserLoggedIn,
+      },
+    })
+  }
+
+    const boardContextValue = {
     activeToolItem: boardState.activeToolItem,
     elements: boardState.elements,
     toolActionType: boardState.toolActionType,
+    canvasId: boardState.canvasId,
+    isUserLoggedIn: boardState.isUserLoggedIn,
     changeToolHandler,
     boardMouseDownHandler,
     boardMouseMoveHandler,
@@ -263,8 +343,13 @@ const BoardProvider = ({ children }) => {
     textAreaBlurHandler,
     redo: boardRedoHandler,
     undo: boardUndoHandler,
+    setCanvasId, 
+    setElements,
+    setHistory,
+    setUserLoginStatus
   };
 
+  
   return (
     <boardContext.Provider value={boardContextValue}>
       {children}

@@ -4,6 +4,7 @@ import boardContext from '../../store/board-context';
 import toolboxContext from '../../store/toolbox-context';
 import { TOOL_ACTION_TYPES, TOOL_ITEMS } from '../../constants';
 import classes from './index.module.css';
+// import socket from "../../utils/socket";
 
 function Board() {
   const canvasRef = useRef();
