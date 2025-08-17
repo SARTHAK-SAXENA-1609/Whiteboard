@@ -36,7 +36,8 @@ exports.updateCanvas = async (req, res) => {
         if (canvas.owner.toString() !== userId && !canvas.shared.includes(userId)) {
             return res.status(403).json({ error: "Unauthorized to update this canvas" });
         }
-
+        console.log(elements);
+        // console.log(elements);
         canvas.elements = elements;
         await canvas.save();
 

@@ -58,23 +58,24 @@ const Sidebar = () => {
   };
 
   const handleCanvasClick = async (id) => {
-    if (!id) return;
+    navigate(`/${id}`);
+    // if (!id) return;
 
-    try {
-      // --- THIS IS THE CORRECTED LINE ---
-      // Changed from /canvas/${id} to /canvas/load/${id} to match your backend API
-      const response = await axios.get(`http://localhost:3030/canvas/load/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-      });
+    // try {
+    //   // --- THIS IS THE CORRECTED LINE ---
+    //   // Changed from /canvas/${id} to /canvas/load/${id} to match your backend API
+    //   const response = await axios.get(`http://localhost:3030/canvas/load/${id}`, {
+    //       headers: { Authorization: `Bearer ${token}` },
+    //   });
 
-      setElements(response.data.elements || []);
-      setHistory(response.data.elements || []);
-      setCanvasId(id);
-      navigate(`/${id}`);
-    } catch (error) {
-        console.error('Error fetching canvas data:', error);
-        navigate('/');
-    }
+    //   setElements(response.data.elements || []);
+    //   setHistory(response.data.elements || []);
+    //   setCanvasId(id);
+    //   navigate(`/${id}`);
+    // } catch (error) {
+    //     console.error('Error fetching canvas data:', error);
+    //     navigate('/');
+    // }
   };
 
   const handleDeleteCanvas = async (idToDelete) => {

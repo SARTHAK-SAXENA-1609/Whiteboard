@@ -1,38 +1,50 @@
 // utils/api.js
 import axios from "axios";
 
-const API_BASE_URL = "https://api-whiteboard-az.onrender.com/api/canvas"; 
+const API_BASE_URL = "http://localhost:3030/canvas";
 
-const token = localStorage.getItem('whiteboard_user_token')
-const canvasId = localStorage.getItem('canvas_id')
+// ✅ FIXED: Pass canvasId, elements, and token as arguments.
+// Do not read them from localStorage here.
+export const updateCanvas = async (canvasId, elements, token) => {
+  // Don't try to save if we don't have what we need.
+  if (!canvasId || !token) {
+    // console.log("Missing canvasId or token, skipping update.");
+    return;
+  }
 
-export const updateCanvas = async (canvasId, elements) => {
   try {
+    // Note: Your backend expects canvasId in the body, which is fine.
     const response = await axios.put(
       `${API_BASE_URL}/update`,
       { canvasId, elements },
       {
         headers: {
-          Authorization: token,
+          // ✅ FIXED: Use the token passed into the function.
+          // The header should be "Bearer <token>"
+          Authorization: `Bearer ${token}`,
         },
       }
     );
     console.log("Canvas updated successfully in the database!", response.data);
+    console.log(response.data);
     return response.data;
   } catch (error) {
-    // console.error("Error updating canvas:", error);
+    console.error("Error updating canvas:", error.response?.data || error.message);
   }
 };
 
-export const fetchInitialCanvasElements = async (canvasId) => {
+// ✅ FIXED: Pass canvasId and token as arguments.
+export const fetchInitialCanvasElements = async (canvasId, token) => {
   try {
+    console.log("fetching initial elements");
     const response = await axios.get(`${API_BASE_URL}/load/${canvasId}`, {
       headers: {
-        Authorization: token,
+        Authorization: `Bearer ${token}`,
       },
     });
     return response.data.elements;
   } catch (error) {
     console.error("Error fetching initial canvas elements:", error);
+    return []; // Return an empty array on error
   }
 };

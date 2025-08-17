@@ -1,4 +1,4 @@
-import React, { useCallback, useReducer } from 'react';
+import React, { useCallback, useReducer , useEffect, useRef } from 'react';
 import boardContext from './board-context';
 import { BOARD_ACTIONS, TOOL_ACTION_TYPES, TOOL_ITEMS } from '../constants';
 import { createElement, getSvgPathFromStroke, isPointNearElement } from '../utils/element';
@@ -192,11 +192,38 @@ const initialBoardState = {
   isUserLoggedIn: isUserLoggedIn,
 };
 
+
 const BoardProvider = ({ children }) => {
   const [boardState, dispatchBoardAction] = useReducer(
     boardReducer,
     initialBoardState
   );
+  const debounceTimer = useRef(null);
+
+  // ✨ NEW: useEffect for Auto-Saving Canvas ✨
+  useEffect(() => {
+    // Clear any existing timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // Set a new timer to save the canvas after 1.5 seconds of inactivity
+    debounceTimer.current = setTimeout(() => {
+      // We only save if there is a canvasId and at least one element
+      if (boardState.canvasId && boardState.elements.length > 0) {
+        const token = localStorage.getItem("whiteboard_user_token");
+        console.log(`Autosaving canvas ${boardState.canvasId}...`);
+        updateCanvas(boardState.canvasId, boardState.elements, token);
+      }
+    }, 1500); // 1.5 second delay
+
+    // Cleanup function to clear the timer if the component unmounts
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [boardState.elements, boardState.canvasId]);
 
   const changeToolHandler = (tool) => {
     dispatchBoardAction({

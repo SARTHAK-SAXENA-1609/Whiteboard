@@ -4,9 +4,10 @@ import boardContext from '../../store/board-context';
 import toolboxContext from '../../store/toolbox-context';
 import { TOOL_ACTION_TYPES, TOOL_ITEMS } from '../../constants';
 import classes from './index.module.css';
+import axios from"axios";
 // import socket from "../../utils/socket";
 
-function Board() {
+function Board({id}) {
   const canvasRef = useRef();
   const textAreaRef = useRef();
   const{ elements ,
@@ -16,8 +17,51 @@ function Board() {
        boardMouseUpHandler,
       textAreaBlurHandler,
       undo,
-      redo
+      redo,
+      setCanvasId,
+      setElements,
+      setHistory
       } = useContext(boardContext);
+
+      // const { toolboxState } = useContext(toolboxContext);
+
+      const token = localStorage.getItem("whiteboard_user_token");
+
+    useEffect(() => {
+    setElements([]);
+    setHistory([]);
+    setCanvasId(id);
+    const fetchCanvasData = async () => {
+      console.log(id);
+      if (id && token) {
+        try {
+          const response = await axios.get(`http://localhost:3030/canvas/load/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          console.log("fetching canvas data from board index.js")
+          // setCanvasId(id); // Set the current canvas ID
+          console.log(response.data.elements);
+          const fetchedElements = response.data.elements || [];
+          setElements(fetchedElements);
+          setHistory(fetchedElements); 
+          console.log("Successfully loaded elements:", fetchedElements);
+        } catch (error) {
+          console.error("Error loading canvas:", error);
+          setElements([]);
+          setHistory([]);
+        } 
+      }
+    };
+
+    fetchCanvasData();
+
+    return () => {
+      setElements([]);
+      setHistory([]);
+    };
+
+
+  }, [id, token]);
 
   // here use layout effect is used instead of use effect
   // Timing: Runs after React renders your component but before the browser paints the changes to the screen.
