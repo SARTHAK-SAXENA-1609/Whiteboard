@@ -95,14 +95,16 @@ export const isPointNearElement = ( element , pointX , pointY )=> {
             );
         case TOOL_ITEMS.BRUSH : {
             const context = document.getElementById("canvas").getContext('2d');
-            return context.isPointInPath(element.path , pointX , pointY);
+            // Regenerate the path from points, as it's not a serializable property
+            const path = new Path2D(getSvgPathFromStroke(getStroke(element.points)));
+            return context.isPointInPath(path, pointX, pointY);
         }
         case TOOL_ITEMS.TEXT : {
             const context = document.getElementById("canvas").getContext('2d');
+            context.save();
             context.font = `${element.size}px Caveat`;
-            context.fillStyle = element.stroke;
             const textWidth = context.measureText(element.text).width;
-            const textHeight = parseInt(element.size);
+            const textHeight = parseInt(element.size, 10);
             context.restore();
             return (
                 isPointCloseToLine(x1, y1, x1 + textWidth, y1, pointX, pointY) ||

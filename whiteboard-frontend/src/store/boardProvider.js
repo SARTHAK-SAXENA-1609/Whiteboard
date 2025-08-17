@@ -321,41 +321,41 @@ const BoardProvider = ({ children }) => {
     });
   },[]);
 
-  const setCanvasId = (canvasId) => {
+  const setCanvasId = useCallback((canvasId) => {
     dispatchBoardAction({
       type: BOARD_ACTIONS.SET_CANVAS_ID,
       payload: {
         canvasId,
       },
     });
-  };
+  }, []);
 
-  const setElements = (elements) => {
+  const setElements = useCallback((elements) => {
     dispatchBoardAction({
       type: BOARD_ACTIONS.SET_CANVAS_ELEMENTS,
       payload: {
         elements,
       },
     });
-  };
+  }, []);
     // console.log("hello canvas")
-  const setHistory = (elements) => {
+  const setHistory = useCallback((elements) => {
     dispatchBoardAction({
       type: BOARD_ACTIONS.SET_HISTORY,
       payload: {
         elements,
       },
     });
-  };  
+  }, []);
 
-  const setUserLoginStatus = (isUserLoggedIn) => {
+  const setUserLoginStatus = useCallback((isUserLoggedIn) => {
     dispatchBoardAction({
       type: BOARD_ACTIONS.SET_USER_LOGIN_STATUS,
       payload: {
         isUserLoggedIn,
       },
     })
-  }
+  }, []);
 
     const boardContextValue = {
     activeToolItem: boardState.activeToolItem,
