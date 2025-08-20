@@ -1,18 +1,108 @@
 const express = require("express");
-const app = express();
-const cors = require('cors');
-const connectToDatabase = require('./db');
+const mongoose = require("mongoose");
+const cors = require("cors");
+require("dotenv").config();
+const connectToDB = require('./db')
+const { Server } = require("socket.io");
+const http = require("http");
+const Canvas = require("./models/canvasModel");
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = process.env.JWT_SECRET;
+
+
 const userRoutes = require("./routes/userRoutes");
 const canvasRoutes = require("./routes/canvasRoutes");
 
-connectToDatabase();
+const app = express();
 
+// Middleware
 app.use(cors());
-app.use(express.json())
+app.use(express.json());
 
-app.use('/users' , userRoutes);
-app.use('/canvas' , canvasRoutes);
+// Routes
+app.use("/users", userRoutes);
+app.use("/canvas", canvasRoutes);
 
-app.listen(3030 , () => { 
-    console.log("listening on 3030");
-})  
+
+connectToDB();
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+      origin: ["http://localhost:3000"], 
+      methods: ["GET", "POST"],
+    },
+  });
+
+let canvasData = {};
+let i = 0;
+
+io.on("connection", (socket) => {
+    console.log("A user connected:", socket.id);
+  
+    socket.on("joinCanvas", async ({ canvasId }) => {
+        console.log("Joining canvas:", canvasId);
+        try {
+        const authHeader = socket.handshake.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            console.log("No token provided.");
+            setTimeout(() => {
+              socket.emit("unauthorized", { message: "Access Denied: No Token" });
+          }, 100);
+            return;
+        }
+
+        const token = authHeader.split(" ")[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const userId = decoded.userId;
+        console.log("User ID:", userId);
+
+        const canvas = await Canvas.findById(canvasId);
+        console.log(canvas)
+        if (!canvas || (String(canvas.owner) !== String(userId) && !canvas.shared.includes(userId))) {
+            console.log("Unauthorized access.");
+            setTimeout(() => {
+                socket.emit("unauthorized", { message: "You are not authorized to join this canvas." });
+            }, 100);
+            return;
+        }
+
+        // socket.emit("authorized");
+  
+        socket.join(canvasId);
+        console.log(`User ${socket.id} joined canvas ${canvasId}`);
+  
+        if (canvasData[canvasId]) {
+            console.log(canvasData)
+          socket.emit("loadCanvas", canvasData[canvasId]);
+        } else {
+          socket.emit("loadCanvas", canvas.elements);
+        }
+      } catch (error) {
+        console.error(error);
+        socket.emit("error", { message: "An error occurred while joining the canvas." });
+        }
+    });
+
+    socket.on("drawingUpdate", async ({ canvasId, elements }) => {
+        try {
+          canvasData[canvasId] = elements;
+    
+          socket.to(canvasId).emit("receiveDrawingUpdate", elements);
+    
+          const canvas = await Canvas.findById(canvasId);
+          if (canvas) {
+            // console.log('updating canvas... ', i++)
+            await Canvas.findByIdAndUpdate(canvasId, { elements }, { new: true, useFindAndModify: false });
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      });
+    
+      socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+      });
+    });
+
+server.listen(3030, () => console.log("Server running on port 3030"));

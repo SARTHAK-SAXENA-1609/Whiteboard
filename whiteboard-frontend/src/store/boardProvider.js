@@ -5,6 +5,7 @@ import { createElement, getSvgPathFromStroke, isPointNearElement } from '../util
 import getStroke from 'perfect-freehand';
 import { updateCanvas, fetchInitialCanvasElements } from "../utils/api";
 const canvasId = "67a66a7c2475972d34655e4d";
+// import { updateCanvas } from '../utils/api';
 
 const boardReducer = (state, action) => {
   switch (action.type) {
@@ -75,8 +76,21 @@ const boardReducer = (state, action) => {
         }
 
         case TOOL_ITEMS.BRUSH: {
-          newElements[index].points = [...newElements[index].points, { x: clientX, y: clientY }];
-          newElements[index].path = new Path2D(getSvgPathFromStroke(getStroke(newElements[index].points)));
+          // To avoid state mutation, we create a new object for the element being updated.
+          const lastElement = newElements[index];
+
+          // Add the new point to a new points array.
+          const newPoints = [...lastElement.points, { x: clientX, y: clientY }];
+
+          // Map points to the format expected by perfect-freehand: [x, y]
+          const stroke = getStroke(newPoints.map(p => [p.x, p.y]));
+
+          // Create a new element object with the updated points and path.
+          newElements[index] = {
+            ...lastElement,
+            points: newPoints,
+            path: new Path2D(getSvgPathFromStroke(stroke)),
+          };
           return {
             ...state,
             elements: newElements,

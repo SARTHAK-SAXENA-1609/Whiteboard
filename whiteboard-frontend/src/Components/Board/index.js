@@ -1,13 +1,13 @@
-import { useContext, useEffect , useLayoutEffect, useRef } from 'react';
+import { useContext, useEffect , useLayoutEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
 import getStroke from 'perfect-freehand';
 import boardContext from '../../store/board-context';
 import toolboxContext from '../../store/toolbox-context';
 import { ARROW_LENGTH, TOOL_ACTION_TYPES, TOOL_ITEMS } from '../../constants';
 import classes from './index.module.css';
-import { fetchInitialCanvasElements } from '../../utils/api';
 import { getSvgPathFromStroke } from '../../utils/element';
 import { getArrowHeadsCoordinates } from '../../utils/math';
+import socket from "../../utils/socket";
 
 function Board({id}) {
   const canvasRef = useRef();
@@ -28,32 +28,74 @@ function Board({id}) {
       // const { toolboxState } = useContext(toolboxContext);
 
       const token = localStorage.getItem("whiteboard_user_token");
+      const [isAuthorized, setIsAuthorized] = useState(true);
 
-    useEffect(() => {
-      setCanvasId(id);
-  
-      const fetchCanvasData = async () => {
-        if (id && token) {
-          console.log(`Fetching canvas data for ${id}...`);
-          const fetchedElements = await fetchInitialCanvasElements(id, token);
-          setElements(fetchedElements);
-          setHistory(fetchedElements);
-          console.log("Successfully loaded elements:", fetchedElements);
-        } else {
-          // If there's no id or token, clear the board
+      // Main effect for handling socket connection, auth, and data loading
+      useEffect(() => {
+        if (!id || !token) {
           setElements([]);
           setHistory([]);
+          return;
         }
-      };
-  
-      fetchCanvasData();
-  
-      // Cleanup function to clear the board when the component unmounts or id changes
-      return () => {
-        setElements([]);
-        setHistory([]);
-      };
-    }, [id, token, setCanvasId, setElements, setHistory]);
+    
+        // Ensure the socket has the correct auth token before connecting.
+        // This is crucial for handling login without a page refresh.
+        socket.io.opts.extraHeaders = {
+          Authorization: `Bearer ${token}`
+        };
+        socket.connect();
+
+        setCanvasId(id);
+        socket.emit("joinCanvas", { canvasId: id });
+    
+        const handleLoadCanvas = (initialElements) => {
+          console.log("Canvas data loaded via socket.");
+          setElements(initialElements || []);
+          setHistory(initialElements || []);
+          setIsAuthorized(true);
+        };
+    
+        const handleReceiveDrawingUpdate = (updatedElements) => {
+          setElements(updatedElements);
+        };
+    
+        const handleUnauthorized = (data) => {
+          console.error("Authorization failed:", data.message);
+          alert(`Access Denied: ${data.message}`);
+          setIsAuthorized(false);
+        };
+    
+        const handleError = (error) => {
+            console.error("Socket error:", error.message);
+            alert(`A server error occurred: ${error.message}`);
+        };
+    
+        socket.on("loadCanvas", handleLoadCanvas);
+        socket.on("receiveDrawingUpdate", handleReceiveDrawingUpdate);
+        socket.on("unauthorized", handleUnauthorized);
+        socket.on("error", handleError);
+    
+        // Cleanup function to remove listeners and disconnect
+        return () => {
+          socket.disconnect();
+          socket.off("loadCanvas", handleLoadCanvas);
+          socket.off("receiveDrawingUpdate", handleReceiveDrawingUpdate);
+          socket.off("unauthorized", handleUnauthorized);
+          socket.off("error", handleError);
+        };
+      }, [id, token, setCanvasId, setElements, setHistory]);
+    
+      // Effect for sending drawing updates to the server with a debounce
+      useEffect(() => {
+        if (!isAuthorized) return;
+        // Debounce to avoid sending too many events
+        const timer = setTimeout(() => {
+          socket.emit("drawingUpdate", { canvasId: id, elements });
+        }, 500);
+
+        return () => clearTimeout(timer);
+      }, [elements, id, isAuthorized]);
+
 
   // here use layout effect is used instead of use effect
   // Timing: Runs after React renders your component but before the browser paints the changes to the screen.
