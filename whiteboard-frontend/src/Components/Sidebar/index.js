@@ -19,7 +19,7 @@ const Sidebar = () => {
     const initializeCanvases = async () => {
       if (isUserLoggedIn) {
         try {
-          const response = await axios.get('http://localhost:3030/canvas/list', {
+          const response = await axios.get('https://whiteboard-o9zj.onrender.com/canvas/list', {
             headers: { Authorization: `Bearer ${token}` }
           });
           const fetchedCanvases = response.data;
@@ -42,7 +42,7 @@ const Sidebar = () => {
 
   const handleCreateCanvas = async () => {
     try {
-      const response = await axios.post('http://localhost:3030/canvas/create', {}, {
+      const response = await axios.post('https://whiteboard-o9zj.onrender.com/canvas/create', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const newCanvas = response.data;
@@ -63,7 +63,7 @@ const Sidebar = () => {
 
   const handleDeleteCanvas = async (idToDelete) => {
     try {
-      await axios.delete(`http://localhost:3030/canvas/delete/${idToDelete}`, {
+      await axios.delete(`https://whiteboard-o9zj.onrender.com/canvas/delete/${idToDelete}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -103,7 +103,7 @@ const Sidebar = () => {
       setSuccess("");
 
       const response = await axios.put(
-        `http://localhost:3030/canvas/share/${canvasId}`,
+        `https://whiteboard-o9zj.onrender.com/canvas/share/${canvasId}`,
         { email },
         { headers: { Authorization: `Bearer ${token}` } }
       );
