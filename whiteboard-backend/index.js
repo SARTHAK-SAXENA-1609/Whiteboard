@@ -59,7 +59,6 @@ io.on("connection", (socket) => {
         console.log("User ID:", userId);
 
         const canvas = await Canvas.findById(canvasId);
-        console.log(canvas)
         if (!canvas || (String(canvas.owner) !== String(userId) && !canvas.shared.includes(userId))) {
             console.log("Unauthorized access.");
             setTimeout(() => {

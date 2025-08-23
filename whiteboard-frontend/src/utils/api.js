@@ -1,7 +1,8 @@
 // utils/api.js
 import axios from "axios";
+const REACT_APP_BACKEND_API_URL = process.env.REACT_APP_BACKEND_API_URL;
 
-const API_BASE_URL = "https://whiteboard-o9zj.onrender.com/canvas";
+const API_BASE_URL = `${REACT_APP_BACKEND_API_URL}/canvas`;
 
 // ✅ FIXED: Pass canvasId, elements, and token as arguments.
 // Do not read them from localStorage here.

@@ -2,25 +2,34 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './index.module.css';
 import boardContext from '../../store/board-context';
+const BACKEND_API_URL = process.env.REACT_APP_BACKEND_API_URL;
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const { isUserLoggedIn, setUserLoginStatus } = useContext(boardContext);
-
-  console.log(isUserLoggedIn);
+  // const BACKEND_API_URL = process.env.REACT_APP_BACKEND_API_URL;
+  console.log(process.env);
+  // console.log(isUserLoggedIn);
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('https://whiteboard-o9zj.onrender.com/users/login', {
+      const response = await fetch(`${BACKEND_API_URL}/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
       });
-      const data = await response.json();
+      // const data = await response.json();
+      let data;
+try {
+  data = await response.json();
+} catch {
+  const text = await response.text();
+  throw new Error(`Non-JSON response: ${text}`);
+}
       if (response.ok) {
         localStorage.setItem('whiteboard_user_token', data.token);
         setUserLoginStatus(true);

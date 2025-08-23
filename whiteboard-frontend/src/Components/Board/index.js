@@ -29,15 +29,28 @@ function Board({id}) {
 
       const token = localStorage.getItem("whiteboard_user_token");
       const [isAuthorized, setIsAuthorized] = useState(true);
+      const [loading, setLoading] = useState(true);
 
       // Main effect for handling socket connection, auth, and data loading
       useEffect(() => {
+        // On every run of this effect (i.e., new canvas or new user), we first
+        // disconnect any existing socket. This is crucial to ensure we establish
+        // a fresh connection with the correct canvas ID and authorization token,
+        // preventing issues where an old, unauthenticated connection might be reused.
+        socket.disconnect();
+
+        // Immediately clear the board state when the canvas ID changes.
+        // This prevents the previous canvas's drawing from "leaking" into the new one.
+        setElements([]);
+        setHistory([]);
+        setIsAuthorized(true); // Reset authorization state for the new canvas
+
         if (!id || !token) {
-          setElements([]);
-          setHistory([]);
+          setLoading(false);
           return;
         }
     
+        setLoading(true);
         // Ensure the socket has the correct auth token before connecting.
         // This is crucial for handling login without a page refresh.
         socket.io.opts.extraHeaders = {
@@ -53,6 +66,7 @@ function Board({id}) {
           setElements(initialElements || []);
           setHistory(initialElements || []);
           setIsAuthorized(true);
+          setLoading(false);
         };
     
         const handleReceiveDrawingUpdate = (updatedElements) => {
@@ -63,11 +77,13 @@ function Board({id}) {
           console.error("Authorization failed:", data.message);
           alert(`Access Denied: ${data.message}`);
           setIsAuthorized(false);
+          setLoading(false);
         };
     
         const handleError = (error) => {
             console.error("Socket error:", error.message);
             alert(`A server error occurred: ${error.message}`);
+            setLoading(false);
         };
     
         socket.on("loadCanvas", handleLoadCanvas);
@@ -75,9 +91,8 @@ function Board({id}) {
         socket.on("unauthorized", handleUnauthorized);
         socket.on("error", handleError);
     
-        // Cleanup function to remove listeners and disconnect
+        // Cleanup function to remove listeners for this specific canvas
         return () => {
-          socket.disconnect();
           socket.off("loadCanvas", handleLoadCanvas);
           socket.off("receiveDrawingUpdate", handleReceiveDrawingUpdate);
           socket.off("unauthorized", handleUnauthorized);
@@ -87,14 +102,23 @@ function Board({id}) {
     
       // Effect for sending drawing updates to the server with a debounce
       useEffect(() => {
-        if (!isAuthorized) return;
-        // Debounce to avoid sending too many events
+        // Do not send updates if the user is not authorized or if the canvas is currently loading.
+        // This prevents sending an empty `elements` array to the server when switching canvases,
+        // which would wipe the canvas data.
+        if (!isAuthorized || loading) return;
+
+        // Debounce to avoid sending too many events.
+        // This effect is sensitive to the `elements` array. When navigating,
+        // the `elements` array from the previous canvas could be sent with the new
+        // canvas ID, causing the "leak". The state clearing in the main `useEffect`
+        // above prevents this by ensuring that a re-render with cleared state
+        // happens first, which cancels any pending timeouts from this effect.
         const timer = setTimeout(() => {
           socket.emit("drawingUpdate", { canvasId: id, elements });
         }, 500);
 
         return () => clearTimeout(timer);
-      }, [elements, id, isAuthorized]);
+      }, [elements, id, isAuthorized, loading]);
 
 
   // here use layout effect is used instead of use effect
@@ -107,6 +131,9 @@ function Board({id}) {
 
   useLayoutEffect(() =>{
     const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
     const context = canvas.getContext('2d');
 
     canvas.width = window.innerWidth;
@@ -215,6 +242,22 @@ function Board({id}) {
   };
 
   const lastElement = elements.length > 0 ? elements[elements.length - 1] : null;
+
+  if (loading) {
+    return (
+      <div className={classes.loadingContainer}>
+        <p>Loading Canvas...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className={classes.unauthorizedContainer}>
+        <p>You are not authorized to view this canvas.</p>
+      </div>
+    );
+  }
 
   return (
     <>

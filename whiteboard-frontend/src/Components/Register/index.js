@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './index.module.css';
 
+
+
 const Register = () => {
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
-
+  const BACKEND_API_URL = process.env.REACT_APP_BACKEND_API_URL;
+  console.log(BACKEND_API_URL);
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
@@ -15,7 +19,7 @@ const Register = () => {
       return;
     }
     try {
-      const response = await fetch('https://whiteboard-o9zj.onrender.com/users/register', {
+      const response = await fetch(`${BACKEND_API_URL}/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

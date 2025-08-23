@@ -4,8 +4,7 @@ import { BOARD_ACTIONS, TOOL_ACTION_TYPES, TOOL_ITEMS } from '../constants';
 import { createElement, getSvgPathFromStroke, isPointNearElement } from '../utils/element';
 import getStroke from 'perfect-freehand';
 import { updateCanvas, fetchInitialCanvasElements } from "../utils/api";
-const canvasId = "67a66a7c2475972d34655e4d";
-// import { updateCanvas } from '../utils/api';
+
 
 const boardReducer = (state, action) => {
   switch (action.type) {

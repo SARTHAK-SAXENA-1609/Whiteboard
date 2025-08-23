@@ -3,6 +3,8 @@ import axios from 'axios';
 import './index.min.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import boardContext from '../../store/board-context';
+const REACT_APP_BACKEND_API_URL = process.env.REACT_APP_BACKEND_API_URL;
+
 
 const Sidebar = () => {
   const [canvases, setCanvases] = useState([]);
@@ -19,7 +21,7 @@ const Sidebar = () => {
     const initializeCanvases = async () => {
       if (isUserLoggedIn) {
         try {
-          const response = await axios.get('https://whiteboard-o9zj.onrender.com/canvas/list', {
+          const response = await axios.get(`${REACT_APP_BACKEND_API_URL}/canvas/list`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           const fetchedCanvases = response.data;
@@ -42,7 +44,7 @@ const Sidebar = () => {
 
   const handleCreateCanvas = async () => {
     try {
-      const response = await axios.post('https://whiteboard-o9zj.onrender.com/canvas/create', {}, {
+      const response = await axios.post(`${REACT_APP_BACKEND_API_URL}/canvas/create`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const newCanvas = response.data;
@@ -63,7 +65,7 @@ const Sidebar = () => {
 
   const handleDeleteCanvas = async (idToDelete) => {
     try {
-      await axios.delete(`https://whiteboard-o9zj.onrender.com/canvas/delete/${idToDelete}`, {
+      await axios.delete(`${REACT_APP_BACKEND_API_URL}/canvas/delete/${idToDelete}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -103,7 +105,7 @@ const Sidebar = () => {
       setSuccess("");
 
       const response = await axios.put(
-        `https://whiteboard-o9zj.onrender.com/canvas/share/${canvasId}`,
+        `${REACT_APP_BACKEND_API_URL}/canvas/share/${canvasId}`,
         { email },
         { headers: { Authorization: `Bearer ${token}` } }
       );
